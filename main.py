@@ -16,8 +16,8 @@ api = twitter.Api(consumer_key=twitterConfig['ConsumerKey'],
                   access_token_key=twitterConfig['AccessToken'],
                   access_token_secret=twitterConfig['AccessSecret'])
 
-TWEET_UPDATES = bool(config['General']['PostUpdates'])
-PRINT_TEXT = bool(config['General']['PrintOutput'])
+TWEET_UPDATES = config['General'].getboolean('PostUpdates')
+PRINT_TEXT = config['General'].getboolean('PrintOutput')
 
 # The API endpoint to use to get Silly Meter infomation.
 url = 'https://www.toontownrewritten.com/api/sillymeter'
