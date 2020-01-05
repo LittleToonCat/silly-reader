@@ -1,0 +1,5 @@
+# Last state of the Silly Meter since last call.
+lastState
+
+# Main config file.
+config.ini

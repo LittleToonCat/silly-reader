@@ -1,0 +1,5 @@
+requests==2.22.0
+requests-oauthlib==1.2.0
+pause==0.2
+pytz==2018.9
+python-twitter==3.5
