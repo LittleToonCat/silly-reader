@@ -59,18 +59,8 @@ def drawMultilineText(layer, xy, texts, fill=None, drawer = None, fontPath='reso
 
 def createActiveImage(rewards, asOf):
     background = Image.open('resources/template.png').convert('RGBA')
-    # layer = Image.new('RGBA', background.size, (255,255,255,0))
-
-    # font = ImageFont.truetype('resources/ImpressBT.ttf', 50)
-    # d = ImageDraw.Draw(layer)
-    # d.text((417, 23), 'The Silly Meter is active!', fill=(255, 187, 87), font=font)
-
     out = drawText(background, (417, 23), 'The Silly Meter is active!', fill=(255, 187, 87))
-
     out = addActiveRewards(out, rewards)
-
-    # out = Image.alpha_composite(background, layer)
-
     out = addFooter(out, asOf)
     return out
 
@@ -88,12 +78,6 @@ def addActiveRewards(out, rewards):
     xOffset = 0
 
     for name in rewards:
-        #xWrapOffset = xOffset
-        #yOffset = 0
-        #for text in textwrap.wrap(name, width=20):
-        #    layer = drawText(layer, (200 + xWrapOffset, 425 + yOffset), text, fill=(255, 187, 87), size=40)
-        #    xWrapOffset += 30
-        #    yOffset += 40
         layer = drawMultilineText(layer, (200 + xOffset, 425), textwrap.fill(name, width=15), fill=(255, 187, 87), size=40,
                                   align='center')
         xOffset += 350
