@@ -1,3 +1,6 @@
+# Python Bytecode
+__pycache__/
+
 # Last state of the Silly Meter since last call.
 lastState
 
