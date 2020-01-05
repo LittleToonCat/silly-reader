@@ -18,43 +18,55 @@ name2icon = {
             "Double Drop Experience": 'resources/icons/sillymeter_dropteam.png',
 }
 
-def drawText(layer, xy, text, fill=None, drawer = None, fontPath='resources/ImpressBT.ttf', size=50):
+name2desc = {
+            "Overjoyed Laff Meters": 'A little joy goes a long way! +8 Maximum Laff Points while the Silly Meter is maxed.',
+            "Decreased Fish Rarity": 'Holy Mackerel! Rare fish are easier to find with this silly perk.',
+            "Double Jellybeans": 'Double your fun (and money) with double jellybeans for all activities!',
+            "Speedy Garden Growth": 'Make your gardens bloom faster than Daisy\'s to ramp up your garden experience.',
+            "Double Racing Tickets": 'Ready, set, GO get Double Tickets at Goofy Speedway! Doesn\'t apply to Grand Prix races.',
+            "Global Teleport Access": 'Who needs ToonTasks? Temporarily unlock teleport access to all areas of Toontown!',
+            "Doodle Trick Boost": 'Jump! Backflip! Dance! Doodles perform tricks more often and earn more experience.',
+            "Double Toon-Up Experience": 'Earn double experience for Toon-Up gags in all battles!',
+            "Double Trap Experience": 'Earn double experience for Trap gags in all battles!',
+            "Double Lure Experience": 'Earn double experience for Lure gags in all battles!',
+            "Double Sound Experience": 'Earn double experience for Sound gags in all battles!',
+            "Double Throw Experience": 'Earn double experience for Throw gags in all battles!',
+            "Double Squirt Experience": 'Earn double experience for Squirt gags in all battles!',
+            "Double Drop Experience": 'Earn double experience for Drop gags in all battles!',
+}
+
+
+def drawText(layer, xy, text, fill=None, drawer = None, fontPath='resources/ImpressBT.ttf', size=50, shadow=True):
     font = ImageFont.truetype(fontPath, size)
     x, y = xy
 
-    shadowLayer = Image.new('RGBA', layer.size, (255, 255, 255, 0))
-
-    shadowDrawer = ImageDraw.Draw(shadowLayer)
-
-    shadowDrawer.text((x+2, y+2), text, fill='black', font=font)
-
-    shadowLayer.filter(ImageFilter.BLUR)
-
-    layer = Image.alpha_composite(layer, shadowLayer)
+    if shadow:
+        shadowLayer = Image.new('RGBA', layer.size, (255, 255, 255, 0))
+        shadowDrawer = ImageDraw.Draw(shadowLayer)
+        shadowDrawer.text((x+2, y+2), text, fill='black', font=font)
+        shadowLayer.filter(ImageFilter.BLUR)
+        layer = Image.alpha_composite(layer, shadowLayer)
 
     drawer = ImageDraw.Draw(layer)
-
     drawer.text(xy, text, fill=fill, font=font)
     return Image.alpha_composite(layer, layer)
 
-def drawMultilineText(layer, xy, texts, fill=None, drawer = None, fontPath='resources/ImpressBT.ttf', size=50, align='left'):
+def drawMultilineText(layer, xy, text, fill=None, drawer = None, fontPath='resources/ImpressBT.ttf', size=50, align='left',
+                      shadow=True):
 
     font = ImageFont.truetype(fontPath, size)
     x, y = xy
 
-    shadowLayer = Image.new('RGBA', layer.size, (255, 255, 255, 0))
-
-    shadowDrawer = ImageDraw.Draw(shadowLayer)
-
-    shadowDrawer.multiline_text((x+2, y+2), texts, fill='black', font=font, align=align)
-
-    shadowLayer.filter(ImageFilter.BLUR)
-
-    layer = Image.alpha_composite(layer, shadowLayer)
+    if shadow:
+        shadowLayer = Image.new('RGBA', layer.size, (255, 255, 255, 0))
+        shadowDrawer = ImageDraw.Draw(shadowLayer)
+        shadowDrawer.multiline_text((x+2, y+2), text, fill='black', font=font, align=align)
+        shadowLayer.filter(ImageFilter.BLUR)
+        layer = Image.alpha_composite(layer, shadowLayer)
 
     drawer = ImageDraw.Draw(layer)
 
-    drawer.multiline_text(xy, texts, fill=fill, font=font, align=align)
+    drawer.multiline_text(xy, text, fill=fill, font=font, align=align)
     return Image.alpha_composite(layer, layer)
 
 def createActiveImage(rewards, asOf):
@@ -75,24 +87,29 @@ def addActiveRewards(out, rewards):
         layer.paste(rewardIcon, (246 + xOffset, 259))
         xOffset += 350
 
+    out = Image.alpha_composite(out, layer)
+
     xOffset = 0
 
     for name in rewards:
-        layer = drawMultilineText(layer, (200 + xOffset, 425), textwrap.fill(name, width=15), fill=(255, 187, 87), size=40,
+        out = drawMultilineText(out, (200 + xOffset, 425), textwrap.fill(name, width=15), fill=(255, 187, 87), size=40,
+                                  align='center')
+
+        desc = name2desc.get(name, '???')
+        out = drawMultilineText(out, (230 + xOffset, 525), textwrap.fill(desc, width=25), fill=(255, 187, 87), size=20,
                                   align='center')
         xOffset += 350
 
-    return Image.alpha_composite(out, layer)
+    return out
 
 
 def addFooter(out, asOf):
     layer = Image.new('RGBA', out.size, (255, 255, 255, 0))
     reader = Image.open('resources/sillyreader.png').convert('RGBA')
     layer.paste(reader, (25, 544))
-
-    layer = drawText(layer, (200, 669), asOf.strftime('Last Updated: %a, %b %-d %Y, %-I:%M %p Toontown Time'), size=40)
-
     out = Image.alpha_composite(out, layer)
+
+    out = drawText(out, (200, 669), asOf.strftime('Last Updated: %a, %b %-d %Y, %-I:%M %p Toontown Time'), size=40)
     return out
 
 if __name__ == "__main__":
@@ -106,5 +123,5 @@ if __name__ == "__main__":
         rewards.add(random.choice(list(name2icon.keys())))
 
     out = createActiveImage(rewards, datetime.now(timezone('US/Pacific')))
-    out.show()
+    # out.show()
     out.save('Test.png')
