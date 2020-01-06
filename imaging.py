@@ -44,7 +44,6 @@ def drawText(layer, xy, text, fill=None, drawer = None, fontPath='resources/Impr
         shadowLayer = Image.new('RGBA', layer.size, (255, 255, 255, 0))
         shadowDrawer = ImageDraw.Draw(shadowLayer)
         shadowDrawer.text((x+2, y+2), text, fill='black', font=font)
-        shadowLayer.filter(ImageFilter.BLUR)
         layer = Image.alpha_composite(layer, shadowLayer)
 
     drawer = ImageDraw.Draw(layer)
@@ -61,7 +60,6 @@ def drawMultilineText(layer, xy, text, fill=None, drawer = None, fontPath='resou
         shadowLayer = Image.new('RGBA', layer.size, (255, 255, 255, 0))
         shadowDrawer = ImageDraw.Draw(shadowLayer)
         shadowDrawer.multiline_text((x+2, y+2), text, fill='black', font=font, align=align)
-        shadowLayer.filter(ImageFilter.BLUR)
         layer = Image.alpha_composite(layer, shadowLayer)
 
     drawer = ImageDraw.Draw(layer)
@@ -72,6 +70,7 @@ def drawMultilineText(layer, xy, text, fill=None, drawer = None, fontPath='resou
 def createActiveImage(rewards, asOf):
     background = Image.open('resources/template.png').convert('RGBA')
     out = drawText(background, (417, 23), 'The Silly Meter is active!', fill=(255, 187, 87))
+    out = drawText(out, (280, 143), 'You can now vote for the following Silly Teams:', fill=(255, 187, 87), size=40)
     out = addActiveRewards(out, rewards)
     out = addFooter(out, asOf)
     return out
