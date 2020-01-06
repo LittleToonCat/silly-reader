@@ -8,15 +8,30 @@ config = configparser.ConfigParser()
 # TODO: Pass the file name through argparse
 config.read('config.ini')
 
-import twitter
-twitterConfig = config['Twitter']
+USING_TWITTER = False
+USING_MASTODON = False
 
-api = twitter.Api(consumer_key=twitterConfig['ConsumerKey'],
-                  consumer_secret=twitterConfig['ConsumerSecret'],
-                  access_token_key=twitterConfig['AccessToken'],
-                  access_token_secret=twitterConfig['AccessSecret'])
+if 'Twitter' in config:
+    USING_TWITTER = True
+    twitterConfig = config['Twitter']
 
-TWEET_UPDATES = config['General'].getboolean('PostUpdates')
+    import twitter
+    twitterApi = twitter.Api(consumer_key=twitterConfig['ConsumerKey'],
+                             consumer_secret=twitterConfig['ConsumerSecret'],
+                             access_token_key=twitterConfig['AccessToken'],
+                             access_token_secret=twitterConfig['AccessSecret'])
+
+if 'Mastodon' in config:
+    USING_MASTODON = True
+    mastodonConfig = config['Mastodon']
+    from mastodon import Mastodon
+    mastodonApi = Mastodon(api_base_url=mastodonConfig['ApiUrl'],
+                           client_id=mastodonConfig['ClientKey'],
+                           client_secret=mastodonConfig['ClientSecret'],
+                           access_token=mastodonConfig['AccessToken'])
+
+
+POST_UPDATES = config['General'].getboolean('PostUpdates')
 PRINT_TEXT = config['General'].getboolean('PrintOutput')
 
 # The API endpoint to use to get Silly Meter infomation.
@@ -44,6 +59,35 @@ logging.Formatter.converter = customTime
 
 console = logging.getLogger(__name__)
 
+def postUpdate(state, message, replyMessage = ''):
+    # Bring up the 'lastState' file.  It is used to determine whether or not the state
+    # have been updated since the previous API calls.
+    if os.path.exists('lastState'):
+        lastState = open('lastState', 'r').read().rstrip()
+    else:
+        lastState = ''
+
+    if not POST_UPDATES or state == lastState:
+        return
+
+    if USING_TWITTER:
+        console.info('Tweeting...')
+        status = twitterApi.PostUpdate(message)
+        console.info(f'Tweeted {status}')
+        if replyMessage:
+            replyStatus = twitterApi.PostUpdate(replyMessage, in_reply_to_status_id=status.id)
+            console.info(f'Reply tweeted. {replyStatus}')
+
+    if USING_MASTODON:
+        console.info('Tooting...')
+        status = mastodonApi.status_post(message)
+        console.info(f'Tooted, {status}')
+        if replyMessage:
+            replyStatus = mastodonApi.status_post(replyMessage, in_reply_to_id=status)
+            console.info(f'Reply tooted. {replyStatus}')
+
+    open('lastState', 'w').write(state)
+
 # Main loop
 while True:
     # Call the endpoint.
@@ -56,21 +100,14 @@ while True:
         console.info(f'Response from web server: {response}')
 
         if int(time.time()) >= response['nextUpdateTimestamp']:
-            # The web server might not have updated yet... Pause for 30 seconds before trying again.
-            console.warning(f"{int(time.time())} is ahead of {response['nextUpdateTimestamp']}, pausing for 30 seconds...")
-            pause.seconds(30)
+            # The web server might not have updated yet... Pause for 20 seconds before trying again.
+            console.warning(f"{int(time.time())} is ahead of {response['nextUpdateTimestamp']}, pausing for 20 seconds...")
+            pause.seconds(20)
             continue
 
         # Setup datetimes for the nextUpdateTime and asOf timestamps respectivly.
         nextUpdateTime = datetime.fromtimestamp(response['nextUpdateTimestamp'], zone)
         asOf = datetime.fromtimestamp(response['asOf'], zone)
-
-        # Bring up the 'lastState' file.  It is used to determine whether or not the state
-        # have been updated since the previous API calls.
-        if os.path.exists('lastState'):
-            lastState = open('lastState', 'r').read().rstrip()
-        else:
-            lastState = ''
 
         # Blank reply update text, because somethings are too big for Twitter's 250 character limit
         # (see Inactive state for an example).
@@ -106,29 +143,18 @@ while True:
 
         if PRINT_TEXT:
             # Print text output
-            print(text)
+            console.info(text)
             if replyText:
-                print(replyText)
+                console.info(replyText)
 
-        if TWEET_UPDATES and not state == lastState:
-            console.info(f"Status has changed from '{lastState}' to '{state}', tweeting...")
-            open('lastState', 'w').write(state)
-            status = api.PostUpdate(text)
-            console.info(f'Tweeted. {status}')
-            if replyText:
-                replyStatus = api.PostUpdate(replyText, in_reply_to_status_id=status.id)
-                console.info(f'Reply tweeted. {replyStatus}')
-
-        pause.until(datetime.fromtimestamp(response['nextUpdateTimestamp'] + 30))
+        postUpdate(state, text, replyText)
+        pause.until(datetime.fromtimestamp(response['nextUpdateTimestamp'] + 20))
     else:
         # uhhhhhhh abormity two???
         now = datetime.now(zone)
         text = now.strftime(f"Abnormity??? The web server has returned a {r.status_code} error code when trying to get Silly Meter status at %a, %b %-d %Y, %-I:%-M %p Toontown Time\n\n")
         text += "Trying again in 5 minutes."
         console.warning(text)
-        if TWEET_UPDATES and not r.status_code == lastState:
-            open('lastState', 'w').write(r.status_code)
-            api.PostUpdate(text)
-            console.info(f'Tweeted. {status}')
 
+        postUpdate(state, text)
         pause.minutes(5)
