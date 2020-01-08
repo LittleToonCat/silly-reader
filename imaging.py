@@ -68,11 +68,35 @@ def drawMultilineText(layer, xy, text, fill=None, drawer = None, fontPath='resou
     return Image.alpha_composite(layer, layer)
 
 def createActiveImage(rewards, asOf):
-    background = Image.open('resources/template.png').convert('RGBA')
+    background = Image.open('resources/active_background.png').convert('RGBA')
     out = drawText(background, (417, 23), 'The Silly Meter is active!', fill=(255, 187, 87))
     out = drawText(out, (280, 143), 'You can now vote for the following Silly Teams:', fill=(255, 187, 87), size=40)
     out = addActiveRewards(out, rewards)
     out = addFooter(out, asOf)
+    return out
+
+def createRewardImage(rewardName, asOf, nextUpdateTime):
+    background = Image.open('resources/reward_background.png').convert('RGBA')
+    out = drawText(background, (307, 23), 'The Silly Meter has reached the top!', fill=(255, 187, 87))
+    out = drawText(out, (350, 100), 'The following Silly Reward is now active:', fill=(255, 187, 87), size=40)
+
+    iconLayer = Image.new('RGBA', out.size, (255, 255, 255, 0))
+    iconPath = name2icon.get(rewardName, 'resources/icons/sillymeter_unknown.png')
+    rewardIcon = Image.open(iconPath).convert('RGBA').resize((150, 150))
+    iconLayer.paste(rewardIcon, (626, 204))
+    out = Image.alpha_composite(out, iconLayer)
+
+    out = drawMultilineText(out, (599, 350), textwrap.fill(rewardName, width=15), fill=(255, 187, 87), size=40,
+                              align='center')
+
+    desc = name2desc.get(rewardName, '???')
+    out = drawMultilineText(out, (599, 450), textwrap.fill(desc, width=25), fill=(255, 187, 87), size=20,
+                              align='center')
+
+    out = drawText(out, (250, 580), nextUpdateTime.strftime('The reward will last until %a, %b %-d %Y, %-I:%M %p Toontown Time'), fill=(255, 187, 87), size=30)
+
+    out = addFooter(out, asOf)
+
     return out
 
 def addActiveRewards(out, rewards):
@@ -101,7 +125,6 @@ def addActiveRewards(out, rewards):
 
     return out
 
-
 def addFooter(out, asOf):
     layer = Image.new('RGBA', out.size, (255, 255, 255, 0))
     reader = Image.open('resources/sillyreader.png').convert('RGBA')
@@ -117,10 +140,11 @@ if __name__ == "__main__":
     from pytz import timezone
 
     # Ensure that the 3 awards are unique.
-    rewards = set()
-    while len(rewards) < 3:
-        rewards.add(random.choice(list(name2icon.keys())))
+    #rewards = set()
+    #while len(rewards) < 3:
+    #    rewards.add(random.choice(list(name2icon.keys())))
 
-    out = createActiveImage(rewards, datetime.now(timezone('US/Pacific')))
+    #out = createActiveImage(rewards, datetime.now(timezone('US/Pacific')))
+    out = createRewardImage('Double Drop Experience', datetime.now(timezone('US/Pacific')), datetime.now(timezone('US/Pacific')))
     # out.show()
     out.save('Test.png')
