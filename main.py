@@ -24,6 +24,7 @@ if 'Twitter' in config:
 if 'Mastodon' in config:
     USING_MASTODON = True
     mastodonConfig = config['Mastodon']
+
     from mastodon import Mastodon
     mastodonApi = Mastodon(api_base_url=mastodonConfig['ApiUrl'],
                            client_id=mastodonConfig['ClientKey'],
@@ -120,7 +121,7 @@ while True:
                 text += f'\n{reward[0]}. {reward[1]}'
         elif state == 'Reward':
             winner = response['winner']
-            text = f"The {winner} reward is now being active throughout Toontown!\n\n"
+            text = f"The {winner} reward is now active throughout Toontown!\n\n"
             text += nextUpdateTime.strftime('The reward will last until %a, %b %-d %Y, %-I:%M %p Toontown Time.')
         elif state == 'Inactive':
             text = "The reward has ended and the The Silly Meter is now cooling down.\n\n"
