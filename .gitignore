@@ -6,3 +6,6 @@ lastState
 
 # Main config file.
 config.ini
+
+# Last image used.
+image.png

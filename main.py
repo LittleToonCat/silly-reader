@@ -3,6 +3,8 @@ import configparser, requests, pause, time, os, logging
 from datetime import datetime
 from pytz import timezone, utc
 
+import imaging
+
 config = configparser.ConfigParser()
 # Read the config file.
 # TODO: Pass the file name through argparse
@@ -34,6 +36,7 @@ if 'Mastodon' in config:
 
 POST_UPDATES = config['General'].getboolean('PostUpdates')
 PRINT_TEXT = config['General'].getboolean('PrintOutput')
+CREATE_IMAGES = config['General'].getboolean('CreateImages')
 
 # The API endpoint to use to get Silly Meter infomation.
 url = 'https://www.toontownrewritten.com/api/sillymeter'
@@ -60,9 +63,22 @@ logging.Formatter.converter = customTime
 
 console = logging.getLogger(__name__)
 
-def postUpdate(state, message, replyMessage = ''):
+def createImageForStatus(response):
+    state = response['state']
+    console.info(f'Creating image for {state}...')
+    if state == 'Active':
+        return imaging.createActiveImage(response['rewards'], datetime.fromtimestamp(response['asOf'], zone))
+    elif state == 'Reward':
+        return imaging.createRewardImage(response['winner'], datetime.fromtimestamp(response['nextUpdateTimestamp'], zone), datetime.fromtimestamp(response['asOf'], zone))
+    elif state == 'Inactive':
+        return imaging.createInactiveImage(response['rewards'], datetime.fromtimestamp(response['nextUpdateTimestamp'], zone), datetime.fromtimestamp(response['asOf'], zone))
+
+    return None
+
+def postUpdate(response, message, replyMessage = ''):
     # Bring up the 'lastState' file.  It is used to determine whether or not the state
     # have been updated since the previous API calls.
+    state = response['state']
     if os.path.exists('lastState'):
         lastState = open('lastState', 'r').read().rstrip()
     else:
@@ -71,17 +87,37 @@ def postUpdate(state, message, replyMessage = ''):
     if not POST_UPDATES or state == lastState:
         return
 
+    console.info(f'"{state}" is different than "{lastState}", posting...')
+
+    if CREATE_IMAGES:
+        image = createImageForStatus(response)
+        if image:
+            image.save('image.png')
+        else:
+            console.warning(f'Don\'t know what to create image for state "{state}"!')
+            image = None
+    else:
+        image = None
+
     if USING_TWITTER:
         console.info('Tweeting...')
-        status = twitterApi.PostUpdate(message)
-        console.info(f'Tweeted {status}')
+        if image:
+            console.info('Uploading image to Twitter...')
+            status = twitterApi.PostUpdate(message, 'image.png')
+        else:
+            status = twitterApi.PostUpdate(message)
+        console.info(f'Tweeted, {status}')
         if replyMessage:
             replyStatus = twitterApi.PostUpdate(replyMessage, in_reply_to_status_id=status.id)
             console.info(f'Reply tweeted. {replyStatus}')
 
     if USING_MASTODON:
         console.info('Tooting...')
-        status = mastodonApi.status_post(message)
+        if image:
+            console.info('Uploading image to Mastodon...')
+            status = mastodonApi.status_post(message, media_ids=mastodonApi.media_post('image.png', 'image/png'))
+        else:
+            status = mastodonApi.status_post(message)
         console.info(f'Tooted, {status}')
         if replyMessage:
             replyStatus = mastodonApi.status_post(replyMessage, in_reply_to_id=status)
@@ -126,11 +162,11 @@ while True:
         elif state == 'Inactive':
             text = "The reward has ended and the The Silly Meter is now cooling down.\n\n"
             text += nextUpdateTime.strftime('It will start up again on %a, %b %-d %Y, %-I:%M %p Toontown Time.')
-            if response.get('rewards'):
-                # We're continuing on from replyText (notice the no "\n" at the end of the inital post).
-                replyText = "Here are the next upcoming Silly Teams:\n"
-                for reward in enumerate(response['rewards'], start=1):
-                    replyText += f'\n{reward[0]}. {reward[1]}'
+
+            # We're continuing on from replyText (notice the no "\n" at the end of the inital post).
+            replyText = "Here are the next upcoming Silly Teams:\n"
+            for reward in enumerate(response['rewards'], start=1):
+                replyText += f'\n{reward[0]}. {reward[1]}'
         else:
             # uhhhhhhh abormity???
             text = f"Landed into an unknown state '{state}'\n\n....Abormity???\n"
@@ -148,7 +184,7 @@ while True:
             if replyText:
                 console.info(replyText)
 
-        postUpdate(state, text, replyText)
+        postUpdate(response, text, replyText)
         pause.until(datetime.fromtimestamp(response['nextUpdateTimestamp'] + 20))
     else:
         # uhhhhhhh abormity two???
@@ -157,5 +193,5 @@ while True:
         text += "Trying again in 5 minutes."
         console.warning(text)
 
-        postUpdate(state, text)
+        postUpdate({'state': r.status_code}, text)
         pause.minutes(5)

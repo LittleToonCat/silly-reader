@@ -75,7 +75,7 @@ def createActiveImage(rewards, asOf):
     out = addFooter(out, asOf)
     return out
 
-def createRewardImage(rewardName, asOf, nextUpdateTime):
+def createRewardImage(rewardName, nextUpdateTime, asOf):
     background = Image.open('resources/reward_background.png').convert('RGBA')
     out = drawText(background, (307, 23), 'The Silly Meter has reached the top!', fill=(255, 187, 87))
     out = drawText(out, (350, 100), 'The following Silly Reward is now active:', fill=(255, 187, 87), size=40)
@@ -99,10 +99,11 @@ def createRewardImage(rewardName, asOf, nextUpdateTime):
 
     return out
 
-def createInactiveImage(rewards, asOf):
+def createInactiveImage(rewards, nextUpdateTime, asOf):
     background = Image.open('resources/inactive_background.png').convert('RGBA')
     out = drawText(background, (300, 23), 'The Silly Meter is now cooling down.', fill=(255, 187, 87))
-    out = drawText(out, (350, 143), 'Here are the next upcoming Silly Teams:', fill=(255, 187, 87), size=40)
+    out = drawText(out, (100, 100), nextUpdateTime.strftime('It will start up again on %a, %b %-d %Y, %-I:%M %p Toontown Time'), fill=(255, 187, 87), size=40)
+    out = drawText(out, (350, 163), 'Here are the next upcoming Silly Teams:', fill=(255, 187, 87), size=40)
     out = addRewardList(out, rewards)
     out = addFooter(out, asOf)
     return out
@@ -152,6 +153,6 @@ if __name__ == "__main__":
     while len(rewards) < 3:
         rewards.add(random.choice(list(name2icon.keys())))
 
-    out = createInactiveImage(rewards, datetime.now(timezone('US/Pacific')))
+    out = createInactiveImage(rewards, datetime.now(timezone('US/Pacific')), datetime.now(timezone('US/Pacific')))
     # out.show()
     out.save('Test.png')
