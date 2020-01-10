@@ -71,7 +71,7 @@ def createActiveImage(rewards, asOf):
     background = Image.open('resources/active_background.png').convert('RGBA')
     out = drawText(background, (417, 23), 'The Silly Meter is active!', fill=(255, 187, 87))
     out = drawText(out, (280, 143), 'You can now vote for the following Silly Teams:', fill=(255, 187, 87), size=40)
-    out = addActiveRewards(out, rewards)
+    out = addRewardList(out, rewards)
     out = addFooter(out, asOf)
     return out
 
@@ -99,7 +99,15 @@ def createRewardImage(rewardName, asOf, nextUpdateTime):
 
     return out
 
-def addActiveRewards(out, rewards):
+def createInactiveImage(rewards, asOf):
+    background = Image.open('resources/inactive_background.png').convert('RGBA')
+    out = drawText(background, (300, 23), 'The Silly Meter is now cooling down.', fill=(255, 187, 87))
+    out = drawText(out, (350, 143), 'Here are the next upcoming Silly Teams:', fill=(255, 187, 87), size=40)
+    out = addRewardList(out, rewards)
+    out = addFooter(out, asOf)
+    return out
+
+def addRewardList(out, rewards):
     layer = Image.new('RGBA', out.size, (255, 255, 255, 0))
 
     xOffset = 0
@@ -140,11 +148,10 @@ if __name__ == "__main__":
     from pytz import timezone
 
     # Ensure that the 3 awards are unique.
-    #rewards = set()
-    #while len(rewards) < 3:
-    #    rewards.add(random.choice(list(name2icon.keys())))
+    rewards = set()
+    while len(rewards) < 3:
+        rewards.add(random.choice(list(name2icon.keys())))
 
-    #out = createActiveImage(rewards, datetime.now(timezone('US/Pacific')))
-    out = createRewardImage('Double Drop Experience', datetime.now(timezone('US/Pacific')), datetime.now(timezone('US/Pacific')))
+    out = createInactiveImage(rewards, datetime.now(timezone('US/Pacific')))
     # out.show()
     out.save('Test.png')
