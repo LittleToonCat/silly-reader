@@ -193,5 +193,5 @@ while True:
         text += "Trying again in 5 minutes."
         console.warning(text)
 
-        postUpdate({'state': r.status_code}, text)
+        postUpdate({'state': str(r.status_code)}, text)
         pause.minutes(5)
