@@ -67,11 +67,11 @@ def createImageForStatus(response):
     state = response['state']
     console.info(f'Creating image for {state}...')
     if state == 'Active':
-        return imaging.createActiveImage(response['rewards'], datetime.fromtimestamp(response['asOf'], zone))
+        return imaging.createActiveImage(response['rewards'], response['rewardDescriptions'], datetime.fromtimestamp(response['asOf'], zone))
     elif state == 'Reward':
-        return imaging.createRewardImage(response['winner'], datetime.fromtimestamp(response['nextUpdateTimestamp'], zone), datetime.fromtimestamp(response['asOf'], zone))
+        return imaging.createRewardImage(response['winner'], response['rewardDescriptions'][0], datetime.fromtimestamp(response['nextUpdateTimestamp'], zone), datetime.fromtimestamp(response['asOf'], zone))
     elif state == 'Inactive':
-        return imaging.createInactiveImage(response['rewards'], datetime.fromtimestamp(response['nextUpdateTimestamp'], zone), datetime.fromtimestamp(response['asOf'], zone))
+        return imaging.createInactiveImage(response['rewards'], response['rewardDescriptions'], datetime.fromtimestamp(response['nextUpdateTimestamp'], zone), datetime.fromtimestamp(response['asOf'], zone))
 
     return None
 

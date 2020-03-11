@@ -18,23 +18,6 @@ name2icon = {
             "Double Drop Experience": 'resources/icons/sillymeter_dropteam.png',
 }
 
-name2desc = {
-            "Overjoyed Laff Meters": 'A little joy goes a long way! +8 Maximum Laff Points while the Silly Meter is maxed.',
-            "Decreased Fish Rarity": 'Holy Mackerel! Rare fish are easier to find with this silly perk.',
-            "Double Jellybeans": 'Double your fun (and money) with double jellybeans for all activities!',
-            "Speedy Garden Growth": 'Make your gardens bloom faster than Daisy\'s to ramp up your garden experience.',
-            "Double Racing Tickets": 'Ready, set, GO get Double Tickets at Goofy Speedway! Doesn\'t apply to Grand Prix races.',
-            "Global Teleport Access": 'Who needs ToonTasks? Temporarily unlock teleport access to all areas of Toontown!',
-            "Doodle Trick Boost": 'Jump! Backflip! Dance! Doodles perform tricks more often and earn more experience.',
-            "Double Toon-Up Experience": 'Earn double experience for Toon-Up gags in all battles!',
-            "Double Trap Experience": 'Earn double experience for Trap gags in all battles!',
-            "Double Lure Experience": 'Earn double experience for Lure gags in all battles!',
-            "Double Sound Experience": 'Earn double experience for Sound gags in all battles!',
-            "Double Throw Experience": 'Earn double experience for Throw gags in all battles!',
-            "Double Squirt Experience": 'Earn double experience for Squirt gags in all battles!',
-            "Double Drop Experience": 'Earn double experience for Drop gags in all battles!',
-}
-
 
 def drawText(layer, xy, text, fill=None, drawer = None, fontPath='resources/ImpressBT.ttf', size=50, shadow=True):
     font = ImageFont.truetype(fontPath, size)
@@ -67,15 +50,15 @@ def drawMultilineText(layer, xy, text, fill=None, drawer = None, fontPath='resou
     drawer.multiline_text(xy, text, fill=fill, font=font, align=align)
     return Image.alpha_composite(layer, layer)
 
-def createActiveImage(rewards, asOf):
+def createActiveImage(rewards, descs, asOf):
     background = Image.open('resources/active_background.png').convert('RGBA')
     out = drawText(background, (417, 23), 'The Silly Meter is active!', fill=(255, 187, 87))
     out = drawText(out, (280, 143), 'You can now vote for the following Silly Teams:', fill=(255, 187, 87), size=40)
-    out = addRewardList(out, rewards)
+    out = addRewardList(out, rewards, descs)
     out = addFooter(out, asOf)
     return out
 
-def createRewardImage(rewardName, nextUpdateTime, asOf):
+def createRewardImage(rewardName, desc, nextUpdateTime, asOf):
     background = Image.open('resources/reward_background.png').convert('RGBA')
     out = drawText(background, (307, 23), 'The Silly Meter has reached the top!', fill=(255, 187, 87))
     out = drawText(out, (350, 100), 'The following Silly Reward is now active:', fill=(255, 187, 87), size=40)
@@ -89,7 +72,6 @@ def createRewardImage(rewardName, nextUpdateTime, asOf):
     out = drawMultilineText(out, (599, 350), textwrap.fill(rewardName, width=15), fill=(255, 187, 87), size=40,
                               align='center')
 
-    desc = name2desc.get(rewardName, '???')
     out = drawMultilineText(out, (599, 450), textwrap.fill(desc, width=25), fill=(255, 187, 87), size=20,
                               align='center')
 
@@ -99,19 +81,20 @@ def createRewardImage(rewardName, nextUpdateTime, asOf):
 
     return out
 
-def createInactiveImage(rewards, nextUpdateTime, asOf):
+def createInactiveImage(rewards, descs, nextUpdateTime, asOf):
     background = Image.open('resources/inactive_background.png').convert('RGBA')
     out = drawText(background, (300, 23), 'The Silly Meter is now cooling down.', fill=(255, 187, 87))
     out = drawText(out, (100, 100), nextUpdateTime.strftime('It will start up again on %a, %b %-d %Y, %-I:%M %p Toontown Time'), fill=(255, 187, 87), size=40)
     out = drawText(out, (350, 163), 'Here are the next upcoming Silly Teams:', fill=(255, 187, 87), size=40)
-    out = addRewardList(out, rewards)
+    out = addRewardList(out, rewards, descs)
     out = addFooter(out, asOf)
     return out
 
-def addRewardList(out, rewards):
+def addRewardList(out, rewards, descs):
     layer = Image.new('RGBA', out.size, (255, 255, 255, 0))
 
     xOffset = 0
+    descCount = 0
 
     for name in rewards:
         iconPath = name2icon.get(name, 'resources/icons/sillymeter_unknown.png')
@@ -127,10 +110,11 @@ def addRewardList(out, rewards):
         out = drawMultilineText(out, (200 + xOffset, 425), textwrap.fill(name, width=15), fill=(255, 187, 87), size=40,
                                   align='center')
 
-        desc = name2desc.get(name, '???')
+        desc = descs[descCount]
         out = drawMultilineText(out, (230 + xOffset, 525), textwrap.fill(desc, width=25), fill=(255, 187, 87), size=20,
                                   align='center')
         xOffset += 350
+        descCount += 1
 
     return out
 
