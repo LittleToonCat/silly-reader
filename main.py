@@ -69,7 +69,7 @@ def createImageForStatus(response):
     if state == 'Active':
         return imaging.createActiveImage(response['rewards'], response['rewardDescriptions'], datetime.fromtimestamp(response['asOf'], zone))
     elif state == 'Reward':
-        return imaging.createRewardImage(response['winner'], response['rewardDescriptions'][0], datetime.fromtimestamp(response['nextUpdateTimestamp'], zone), datetime.fromtimestamp(response['asOf'], zone))
+        return imaging.createRewardImage(response['winner'], response['rewardDescriptions'][response['rewards'].index(response['winner'])], datetime.fromtimestamp(response['nextUpdateTimestamp'], zone), datetime.fromtimestamp(response['asOf'], zone))
     elif state == 'Inactive':
         return imaging.createInactiveImage(response['rewards'], response['rewardDescriptions'], datetime.fromtimestamp(response['nextUpdateTimestamp'], zone), datetime.fromtimestamp(response['asOf'], zone))
 
