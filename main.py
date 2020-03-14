@@ -46,7 +46,7 @@ zone = timezone('US/Pacific')
 
 # HTTP headers to use when requesting HTTP calls to the endpoint.
 headers = {
-    'User-Agent': "The Silly Reader (@Silly_Meter)\n(Twitter account run & programmed by: @LittleToonCat)\nGitHub repository: https://github.com/LittleToonCat/silly-reader"
+    'User-Agent': "The Silly Reader (@Silly_Meter) (Twitter account run & programmed by: @LittleToonCat) GitHub repository: https://github.com/LittleToonCat/silly-reader"
 }
 
 # Function to pass to logging to print time wih the Toontown time.
@@ -128,7 +128,7 @@ def postUpdate(response, message, replyMessage = ''):
 # Main loop
 while True:
     # Call the endpoint.
-    r = requests.get(url, headers)
+    r = requests.get(url, headers=headers)
 
     if r.status_code == 200:
         # Convert the json response into a dict.
