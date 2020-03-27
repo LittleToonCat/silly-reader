@@ -160,7 +160,7 @@ while True:
             text = f"The {winner} reward is now active throughout Toontown!\n\n"
             text += nextUpdateTime.strftime('The reward will last until %a, %b %-d %Y, %-I:%M %p Toontown Time.')
         elif state == 'Inactive':
-            text = "The reward has ended and the The Silly Meter is now cooling down.\n\n"
+            text = "The reward has ended and The Silly Meter is now cooling down.\n\n"
             text += nextUpdateTime.strftime('It will start up again on %a, %b %-d %Y, %-I:%M %p Toontown Time.')
 
             # We're continuing on from replyText (notice the no "\n" at the end of the inital post).
