@@ -3,7 +3,7 @@ import textwrap
 
 name2icon = {
             "Overjoyed Laff Meters": 'resources/icons/sillymeter_laffteam.png',
-            "Decreased Fish Rarity": 'resources/icons/sillymeter_fishteam.png',
+            "Teeming Fish Waters": 'resources/icons/sillymeter_fishteam.png',
             "Double Jellybeans": 'resources/icons/sillymeter_beanteam.png',
             "Speedy Garden Growth": 'resources/icons/sillymeter_gardenteam.png',
             "Double Racing Tickets": 'resources/icons/sillymeter_racingteam.png',
